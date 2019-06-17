@@ -66,6 +66,35 @@ I am using digital ocean
 - Users can be deleted later with `[userdel](http://manpages.ubuntu.com/manpages/trusty/man8/userdel.8.html)` or `deluser`: `userdel grader`.
 - View list of users with `cut -d: -f1 /etc/passwd`
 
+## Set up SSH
+
+- See the [DigitalOcean How To Connect To Your Droplet with SSH](https://www.digitalocean.com/community/tutorials/how-to-connect-to-your-droplet-with-ssh) guide.
+- I [generated an SSH key and added it to the SSH agent](https://help.github.com/articles/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent/) *on my local machine,* with the method recommended by GitHub, which attaches your email instead of the local machine name. The config file may need to be manually created with `touch ~/.ssh/config` first. I named the key `udacity6`.
+
+  ```sh
+  $ touch ~/.ssh/config
+  $ ssh-keygen -t rsa -b 4096 -C "your_email@example.com"
+    # Enter file in which to save the key (/home/vagrant/.ssh/id_rsa):/home/vagrant/.ssh/udacitylinux
+    # Your identification has been saved in /home/vagrant/.ssh/udacitylinux.
+    # Your public key has been saved in /Users/br3ndonland/.ssh/udacitylinux.pub.
+  $ eval "$(ssh-agent -s)"
+  $ ssh-add -K ~/.ssh/udacitylinux
+  ```
+
+- I copied the SSH key to the server for each user with `ssh-copy-id`. **Note that `ssh-copy-id` relies on password authentication, so if you disable password authentication this won't work.** Copy the SSH ID and verify login before disabling password authentication. If you have already reconfigured your ssh port to 2200, add `-p 2200`. Also, be sure to reference the *private* key when using `ssh-copy-id`, and not the public key (in this example, *udacity6* instead of *udacity6.pub*).
+
+  ```sh
+  ssh-copy-id -i ~/.ssh/udacitylinux jalanvanshika@165.22.178.141
+  ssh jalanvanshika@165.22.178.141
+  exit
+  ssh-copy-id -i ~/.ssh/udacity6 grader@165.22.178.141
+  ssh grader@165.22.178.141
+  exit
+  ```
+
+- At this point, login will be accomplished by matching the *private* key that pairs with the public key you uploaded.
+
+
 
 
 
