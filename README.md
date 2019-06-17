@@ -50,16 +50,16 @@ I am using digital ocean
 - The first step is logging in as root:
 
   ```sh
-  ssh root@192.241.141.20
+  ssh root@165.22.178.141
   ```
 
 - At this point, root can log in with the password sent to your email address by DigitalOcean, and you can then change the password after login.
 - After logging in as root, I created two users: `br3ndonland` for me and `grader` for the Udacity grader. I left the `grader` password `grader`. I gave each user `sudo` privileges.
 
   ```sh
-  adduser br3ndonland
+  adduser jalanvanshika
   adduser grader
-  usermod -aG sudo br3ndonland
+  usermod -aG sudo jalanvanshika
   usermod -aG sudo grader
   ```
 
