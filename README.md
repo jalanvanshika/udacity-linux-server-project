@@ -17,17 +17,14 @@
 - [Troubleshooting](#troubleshooting)
 
 ## Select a server host
-
-I started out configuring a server with [Amazon Lightsail](https://aws.amazon.com/lightsail/), as recommended by Udacity. I was not happy with the experience. In particular, when changing the SSH port, I got locked out and had to destroy and recreate the instance. I also am required to set up a user `grader` for this project, but was not able to log in with any user other than `ubuntu`.
-
-<details><summary>Here are my notes on Amazon Lightsail.</summary>
+I am using digital ocean
 
 ## Set up server
 
 - It was easy to set up my DigitalOcean droplet. I just followed the on-screen instructions, but there is also a [tutorial](info@news.digitalocean.com) available if needed.
-- I chose a $5 base-level droplet, enabled the $1 backups, and paid for it with PayPal.
+- I chose a $5 base-level droplet.
 - I did not set up the SSH key during droplet creation. See below for SSH setup.
-- Ready to go! Wow, that was so much easier than Amazon Lightsail.
+- Connect to the server
 - Update and upgrade packages, then reboot
 
   ```sh
