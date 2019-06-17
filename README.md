@@ -1,0 +1,70 @@
+## Table of Contents <!-- omit in toc -->
+
+- [Select a server host](#select-a-server-host)
+- [Set up server](#set-up-server)
+- [Set up user](#set-up-user)
+- [Set up SSH](#set-up-ssh)
+- [Secure server](#secure-server)
+- [Deploy app](#deploy-app)
+  - [Configure PostgreSQL](#configure-postgresql)
+  - [Clone app files](#clone-app-files)
+  - [Set up Python environment](#set-up-python-environment)
+  - [Configure web server](#configure-web-server)
+- [Domain name](#domain-name)
+- [SSL](#ssl)
+- [Database maintenance](#database-maintenance)
+- [Docker deployment](#docker-deployment)
+- [Troubleshooting](#troubleshooting)
+
+## Select a server host
+
+I started out configuring a server with [Amazon Lightsail](https://aws.amazon.com/lightsail/), as recommended by Udacity. I was not happy with the experience. In particular, when changing the SSH port, I got locked out and had to destroy and recreate the instance. I also am required to set up a user `grader` for this project, but was not able to log in with any user other than `ubuntu`.
+
+<details><summary>Here are my notes on Amazon Lightsail.</summary>
+
+## Set up server
+
+- It was easy to set up my DigitalOcean droplet. I just followed the on-screen instructions, but there is also a [tutorial](info@news.digitalocean.com) available if needed.
+- I chose a $5 base-level droplet, enabled the $1 backups, and paid for it with PayPal.
+- I did not set up the SSH key during droplet creation. See below for SSH setup.
+- Ready to go! Wow, that was so much easier than Amazon Lightsail.
+- Update and upgrade packages, then reboot
+
+  ```sh
+  sudo apt update
+  sudo apt upgrade
+  sudo reboot
+  ```
+
+- Set time zone to UTC:
+
+  ```sh
+  sudo dpkg-reconfigure tzdata
+  ```
+
+  - Select "None of these," then find UTC in the list and press enter.
+- If you ever need to restart the server, run either `sudo reboot`, or `sudo shutdown -h now` and turn the server back on through the website interface.
+
+[(Back to top)](#top)
+
+## Set up user
+
+- I continued by following the [DigitalOcean Initial Server Setup with Ubuntu 16.04 tutorial](https://www.digitalocean.com/community/tutorials/initial-server-setup-with-ubuntu-16-04).
+- The first step is logging in as root:
+
+  ```sh
+  ssh root@192.241.141.20
+  ```
+
+- At this point, root can log in with the password sent to your email address by DigitalOcean, and you can then change the password after login.
+- After logging in as root, I created two users: `br3ndonland` for me and `grader` for the Udacity grader. I left the `grader` password `grader`. I gave each user `sudo` privileges.
+
+  ```sh
+  adduser br3ndonland
+  adduser grader
+  usermod -aG sudo br3ndonland
+  usermod -aG sudo grader
+  ```
+
+- Users can be deleted later with `[userdel](http://manpages.ubuntu.com/manpages/trusty/man8/userdel.8.html)` or `deluser`: `userdel grader`.
+- View list of users with `cut -d: -f1 /etc/passwd`
