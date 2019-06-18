@@ -197,12 +197,264 @@ I am using digital ocean
 
 [(Back to top)](#top)
 
+## Deploy app
+
+DigitalOcean has helpful documentation for the Linux server itself, but less documentation for applications. They have [one-click app support for Django](https://www.digitalocean.com/community/tutorials/how-to-use-the-django-one-click-install-image-for-ubuntu-16-04), but not for Flask. 
+
+### Configure PostgreSQL
+
+- My app uses SQLite, but Postgres is a more flexible choice for a multi-user application database. Create a PostgreSQL database for the app. The `psql` command activates the SQL interpreter, and the words in capital letters are SQL commands. Note the prompt changes after logging in to the database.
+
+  ```sh
+  $ sudo apt-get install libpq5
+  $ sudo apt-get install postgresql
+  $ sudo su - postgres
+  postgres@udacity6:~$ psql
+  psql (9.5.12)
+  Type "help" for help.
+
+  postgres=CREATE USER catalog WITH PASSWORD 'grader';
+  CREATE ROLE
+  postgres=ALTER USER catalog CREATEDB;
+  ALTER ROLE
+  postgres=CREATE DATABASE catalog WITH OWNER catalog;
+  CREATE DATABASE
+  postgres=\c catalog
+  You are now connected to database "catalog" as user "postgres".
+  catalog=REVOKE ALL ON SCHEMA public FROM public;
+  REVOKE
+  catalog=GRANT ALL ON SCHEMA public TO catalog;
+  GRANT
+  catalog=\q
+  postgres@udacity6:~$ exit
+  logout
+  ```
+
+- See below for more info on [database maintenance](#database-maintenance).
+- Changing from SQLite to PostgreSQL will require installation of `psycopg2` after Python is installed.
+
+### Clone app files
+
+- Git should already be installed.
+
+  ```sh
+  $ which git
+  /usr/bin/git
+  ```
+
+- Clone [app repo](https://github.com/br3ndonland/udacity-fsnd-p4-flask-catalog) and create directory in a single step:
+
+  ```sh
+  sudo git clone git://github.com/br3ndonland/udacity-fsnd-p4-flask-catalog.git /var/www/catalog
+  ```
+
+  The app is now located in `/var/www/`, the directory in which Apache allows sites, or "virtual host configurations."
+
+  ```text
+  cd /var/www/catalog
+  ```
+
+- Change owner of catalog directory:
+
+  ```sh
+  sudo chown -R grader:grader /var/www/catalog
+  ```
+
+### Set up Python environment
+
+#### Configure app files
+
+- Copy the client secret from your [Google Cloud APIs credentials dashboard](https://console.cloud.google.com/apis/credentials) into the *client_secrets.json* file on the server. Make sure the server's IP, and your domain name if you have one, have been added to the "Authorized JavaScript origins" and "Authorized redirect URIs."
+
+  ```sh
+  cd /var/www/catalog
+  sudo touch client_secrets.json
+  sudo nano client_secrets.json
+  ```
+
+- Modify the *project.py* file for the server:
+  - Move `app.secret_key` out of the `if __name__ == '__main__'` block (which will not be used by the WSGI server), as recommended [here](https://stackoverflow.com/a/33898263).
+  - Change paths to the *client_secrets.json* file, and any other external files, to absolute. Remember to modify the path in the Google Sign-In code.
+
+  ```sh
+  cd /var/www/catalog
+  sudo nano application.py
+  ```
+
+  ```python
+  # Obtain credentials from JSON file
+  CLIENT_ID = json.loads(open('/var/www/catalog/client_secrets.json', 'r')
+                        .read())['web']['client_id']
+  CLIENT_SECRET = json.loads(open('/var/www/catalog/client_secrets.json', 'r')
+                            .read())['web']['client_secret']
+  redirect_uris = json.loads(open('/var/www/catalog/client_secrets.json', 'r')
+                            .read())['web']['redirect_uris']
+  app.secret_key = CLIENT_SECRET
 
 
+- Configure *database_setup.py*, *database_data.py*, and *application.py* for PostgreSQL instead of SQLite.
+
+  ```python
+  # delete this
+  # engine = create_engine('sqlite:///catalog.db')
+  # and add this
+  engine = create_engine('postgresql://catalog:grader@localhost/catalog')
+  ```
+
+#### Set up Python
+
+- Install Python 3.6
+  - My virtual environment requires Python 3.6, which is not available from Ubuntu apt yet. Python 3.6 must be installed as a third-party application.
+  - I followed the instructions [here](https://askubuntu.com/a/865569) to install:
+
+    ```sh
+    sudo add-apt-repository ppa:deadsnakes/ppa
+    sudo apt update
+    sudo apt install python3.6
+    ```
+
+  - Python 3.6 must be specified with `python3.6` when python is run, or when the virtual environment is configured.
+
+- Install pip
+
+  ```sh
+  sudo apt install python3-pip
+  ```
+
+#### Run app without virtual environment
+
+**Note that, despite extensive troubleshooting, I was not able to configure WSGI to serve up the Python Flask app from a virtual environment. The way I got the app running was by installing required packages without a virtual environment.**
+
+- Install required packages
+
+  ```sh
+  sudo pip3 install flask
+  sudo pip3 install oauth2client
+  sudo pip3 install psycopg2
+  sudo pip3 install requests
+  sudo pip3 install sqlalchemy
+  ```
+
+- Run application files
+
+  ```sh
+  python3.6 database_setup.py
+  python3.6 database_data.py
+  python3.6 application.py
+  ```
+
+- The Flask app should now be running on localhost. Stop the local server with ctrl+c and continue with the configuration process.
 
 
+### Configure web server
 
+#### WSGI
 
+- Create WSGI script.
+  - It seems like the script can either be named `catalog.wsgi` or `wsgi.py`, as long as the script name is properly specified in the Apache configuration file.
+  - The script has a few parts:
+    - Enabling the virtual environment: As explained above, I wasn't able to get WSGI to serve the app from the virtual environment, so I deleted this part. In the future, if configuration is successful, code added to *wsgi.py* would look something like this (based on the [Flask mod_wsgi docs](http://flask.pocoo.org/docs/1.0/deploying/mod_wsgi/#working-with-virtual-environments), modified for pipenv):
+
+      ```python
+      # Enable use of virtual environment with mod_wsgi
+      activate_this = '/home/grader/.local/share/virtualenvs/catalog-1BsMKvn0/bin/activate_this.py'
+      with open(activate_this) as file_:
+          exec(file_.read(), dict(__file__=activate_this))
+      ```
+
+    - Specifying the path to the application directory: It seems like this path is only used within *wsgi.py* to find the specific *application.py* file. File paths used within *application.py* will still need to be changed to absolute.
+    - Importing the Flask app: The syntax requirements here were a little difficult to figure out also. I originally had `from catalog import app as application`, which didn't seem to be working. It helped to open the *wsgi.py* file in my local text editor (vscode), because the linting showed me that `catalog` was not found. I needed to import the Flask instance (`app`) from the application file *application.py*, which would be `from application import app as application`.
+    - Name main block: This seems to be used instead of the name/main block in the main application file. I added the filesystem session type as recommended [here](https://stackoverflow.com/a/33898263).
+- Here's what a completed WSGI script should look like:
+
+  ```sh
+  sudo nano /var/www/catalog/wsgi.py
+  ```
+
+  ```python
+  # Add path to application directory
+  import sys
+  sys.path.insert(0, "/var/www/catalog")
+
+  # Import Flask instance from main application file
+  from application import app as application
+
+  if __name__ == '__main__':
+      app.config['SESSION_TYPE'] = 'filesystem'
+      app.run(host='0.0.0.0', port=8000)
+
+  ```
+
+#### Apache
+
+- Install and configure Apache to serve a Python `mod_wsgi` application. The [Flask docs](http://flask.pocoo.org/docs/1.0/deploying/mod_wsgi/) have some simple instructions.
+- Install Apache and Python 3 `mod_wsgi`
+
+  ```sh
+  sudo apt-get install apache2
+  sudo apt-get install libapache2-mod-wsgi-py3
+  ```
+
+  - Some guides also suggest running `sudo a2enmod wsgi`, but WSGI should already enable itself upon installation.
+- Browsing to the server ip [http://192.241.141.20/](http://192.241.141.20/) should show the "It works!" default Apache page.
+  > Apache2 Ubuntu Default Page
+  >
+  > It works!
+  >
+  > This is the default welcome page used to test the correct operation of the Apache2 server after installation on Ubuntu systems.
+- Add Apache [configuration file](http://httpd.apache.org/docs/current/configuring.html) `catalog.conf`.
+  - `ServerName`: Server's IP address.
+  - `ServerAdmin`: Optionally enter your email address here.
+  - `WSGIDaemonProcess`: Helps the app run when logged in as a different user.
+  - `WSGIScriptAlias`: There is an initial `/`, followed by the absolute file path to the WSGI script.
+  - The `Directory` section grants access to the directory containing the application files.
+  - The `ErrorLog` and `CustomLog` are particularly helpful for debugging.
+- Here's how the completed Apache configuration file will look:
+
+  ```sh
+  sudo nano /etc/apache2/sites-available/catalog.conf
+  ```
+
+  ```text
+  <VirtualHost *:80>
+    ServerName 192.241.141.20
+    ServerAdmin brendon.w.smith@gmail.com
+    WSGIDaemonProcess application user=br3ndonland threads=3
+    WSGIScriptAlias / /var/www/catalog/wsgi.py
+    <Directory /var/www/catalog/>
+      WSGIProcessGroup application
+      WSGIApplicationGroup %{GLOBAL}
+      Require all granted
+    </Directory>
+    ErrorLog ${APACHE_LOG_DIR}/error.log
+    LogLevel warn
+    CustomLog ${APACHE_LOG_DIR}/access.log combined
+  </VirtualHost>
+  ```
+
+- Enable virtual host (should only need to be done once):
+
+  ```sh
+  sudo a2ensite catalog
+  sudo service apache2 restart
+  ```
+
+[(Back to top)](#top)
+
+## Domain name
+
+- DigitalOcean is not a DNS registrar at this time. I followed the [DigitalOcean DNS tutorial](https://www.digitalocean.com/community/tutorials/an-introduction-to-digitalocean-dns) to add a domain name purchased through [Hover](https://www.hover.com/).
+- From my Hover dashboard, I pointed the domain to DigitalOcean's nameservers.
+
+  ```text
+  ns1.digitalocean.com
+  ns2.digitalocean.com
+  ns3.digitalocean.com
+  ```
+
+- In my DigitalOcean account, from the Networking tab, I set an A record (for ipv4) and an AAAA record (for ipv6) so that the hostname catalog.br3ndonland.com directs to the server's IP.
+
+[(Back to top)](#top)
 
 
 ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDbE91jtYqauFIGdagYB5PKZMdvG12CXcD4c3DcVrVdi6XAy1nYhjD3zwhFN+j1D9jLmru5X7Ro4dDKSJPnTCMQpW7Znen7J6cmW3pP92DEMZwo7ISwCk8XZ8GTtPCvV6VtapIbe04rrTbIxexEt0kUeOwU0MYsCa74TxGxXd07zfn2t7IbV4pdxF2ddj1Erf6BxDXiR0TKJaR9VOYJ8rwN+k9JmtpS9pHCQipme0roHs6fZIt/PCE/mgkzJJWH+Ag6CE5I00xSwsvvQjW0LD43NDvDFES7SEt/TpJVqc/iRapqNjR/wooPvyHt+XvSLI10IkpFKiP51JRzLo3hjXUz vagrant@vagrant
