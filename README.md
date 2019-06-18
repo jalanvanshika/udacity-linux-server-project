@@ -227,8 +227,6 @@ DigitalOcean has helpful documentation for the Linux server itself, but less doc
   postgres@udacity6:~$ exit
   logout
   ```
-
-- See below for more info on [database maintenance](#database-maintenance).
 - Changing from SQLite to PostgreSQL will require installation of `psycopg2` after Python is installed.
 
 ### Clone app files
@@ -337,8 +335,8 @@ DigitalOcean has helpful documentation for the Linux server itself, but less doc
 
   ```sh
   python3.6 database_setup.py
-  python3.6 database_data.py
-  python3.6 application.py
+  python3.6 datas.py
+  python3.6 project.py
   ```
 
 - The Flask app should now be running on localhost. Stop the local server with ctrl+c and continue with the configuration process.
