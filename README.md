@@ -87,7 +87,7 @@ I am using digital ocean
   ssh-copy-id -i ~/.ssh/udacitylinux jalanvanshika@165.22.178.141
   ssh jalanvanshika@165.22.178.141
   exit
-  ssh-copy-id -i ~/.ssh/udacity6 grader@165.22.178.141
+  ssh-copy-id -i ~/.ssh/udacitylinux grader@165.22.178.141
   ssh grader@165.22.178.141
   exit
   ```
@@ -96,6 +96,106 @@ I am using digital ocean
 
 
 
+## Secure server
+
+- I did this as user `grader` with `sudo`.
+
+  ```sh
+  sudo ufw app list
+  sudo ufw allow OpenSSH
+  sudo ufw allow 2200
+  sudo ufw allow 2200/tcp
+  sudo ufw allow 80/tcp
+  sudo ufw allow 123/udp
+  sudo ufw enable
+  ```
+
+  ```text
+  $ sudo ufw status
+  Status: active
+
+  To                         Action      From
+  --                         ------      ----
+  OpenSSH                    ALLOW       Anywhere
+  2200/tcp                   ALLOW       Anywhere
+  80/tcp                     ALLOW       Anywhere
+  123/udp                    ALLOW       Anywhere
+  2200                       ALLOW       Anywhere
+  OpenSSH (v6)               ALLOW       Anywhere (v6)
+  2200/tcp (v6)              ALLOW       Anywhere (v6)
+  80/tcp (v6)                ALLOW       Anywhere (v6)
+  123/udp (v6)               ALLOW       Anywhere (v6)
+  2200 (v6)                  ALLOW       Anywhere (v6)
+  ```
+
+- Change SSH port from 22 to 2200
+  - We were required to do this for the Udacity project.
+  - Open the configuration file and edit the file with the nano text editor.
+
+    ```sh
+    sudo nano /etc/ssh/sshd_config
+    ```
+
+    ```text
+    # What ports, IPs and protocols we listen for
+    Port 2200
+    ```
+
+  - **Important**: Disable password authentication in `sshd_config` so SSH is required for login, and disable root login so user must specify `sudo`:
+
+    ```text
+    # Change to no to disable tunnelled clear text passwords
+    PasswordAuthentication no
+    PermitRootLogin no
+    ```
+
+  - Save and quit with ctrl+x.
+  - Restart SSH
+
+    ```sh
+    sudo systemctl reload sshd
+    sudo service ssh restart
+    ```
+
+  - Exit and log back in, this time specifying port 2200.
+
+    ```sh
+    logout
+    ssh grader@165.22.178.141 -p 2200
+    ```
+- The *~/.ssh/config* file on your local machine can also be configured for easier login. This file is on my local machine, so I was able to to open it with vscode.
+
+  ```sh
+  $ code ~/.ssh/config
+  ```
+
+  ```text
+  Host udacitylinux
+    Hostname 165.22.178.141
+    User grader
+    Port 2200
+    PubKeyAuthentication yes
+    IdentityFile ~/.ssh/udacitylinux
+
+  Host *
+    AddKeysToAgent yes
+    UseKeychain yes
+    IdentityFile ~/.ssh/id_rsa
+  ```
+
+- If the config file is set up as above, log in with `ssh udacitylinux`.
+
+- **After disabling password login, I started getting the SSH error `Permission denied (publickey).`** I couldn't log in from my local terminal. I spent hours troubleshooting it and working in the DigitalOcean browser console.  I read resources including [SSH.com](https://www.ssh.com/iam/ssh-key-management/) and [askubuntu](https://askubuntu.com/questions/311558/ssh-permission-denied-publickey), but the solutions didn't help. Eventually, I realized that the best solution was:
+  - Delete the SSH key
+  - Re-do the keygen as described above.
+  - Temporarily enable password login again from the DigitalOcean browser console.
+  - Add the new key with `ssh-copy-id` as described above, and authenticate with user password.
+  - Log in with SSH.
+  - Disable password authentication.
+  - Exit
+  - Log back in to verify SSH.
+
+[(Back to top)](#top)
 
 
 
