@@ -1,4 +1,4 @@
-## Table of Contents <!-- omit in toc -->
+## Contents <!-- omit in toc -->
 
 - [Select a server host](#select-a-server-host)
 - [Set up server](#set-up-server)
@@ -11,10 +11,6 @@
   - [Set up Python environment](#set-up-python-environment)
   - [Configure web server](#configure-web-server)
 - [Domain name](#domain-name)
-- [SSL](#ssl)
-- [Database maintenance](#database-maintenance)
-- [Docker deployment](#docker-deployment)
-- [Troubleshooting](#troubleshooting)
 
 ## Select a server host
 I am using digital ocean
@@ -242,10 +238,10 @@ DigitalOcean has helpful documentation for the Linux server itself, but less doc
   /usr/bin/git
   ```
 
-- Clone [app repo](https://github.com/br3ndonland/udacity-fsnd-p4-flask-catalog) and create directory in a single step:
+- Clone [app repo](https://github.com/jalanvanshika/udacity-item-catalog-project) and create directory in a single step:
 
   ```sh
-  sudo git clone git://github.com/br3ndonland/udacity-fsnd-p4-flask-catalog.git /var/www/catalog
+  sudo git clone https://github.com/jalanvanshika/udacity-item-catalog-project /var/www/catalog
   ```
 
   The app is now located in `/var/www/`, the directory in which Apache allows sites, or "virtual host configurations."
@@ -278,7 +274,7 @@ DigitalOcean has helpful documentation for the Linux server itself, but less doc
 
   ```sh
   cd /var/www/catalog
-  sudo nano application.py
+  sudo nano project.py
   ```
 
   ```python
