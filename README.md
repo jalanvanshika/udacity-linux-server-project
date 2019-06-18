@@ -1,3 +1,5 @@
+# Linux Server Configuration
+
 ## Contents <!-- omit in toc -->
 
 - [Select a server host](#select-a-server-host)
@@ -46,11 +48,11 @@ I am using digital ocean
 - The first step is logging in as root:
 
   ```sh
-  ssh root@165.22.178.141
+  ssh root@159.65.159.60
   ```
 
 - At this point, root can log in with the password sent to your email address by DigitalOcean, and you can then change the password after login.
-- After logging in as root, I created two users: `br3ndonland` for me and `grader` for the Udacity grader. I left the `grader` password `grader`. I gave each user `sudo` privileges.
+- After logging in as root, I created two users: `jalanvanshika` for me and `grader` for the Udacity grader. I left the `grader` password `grader`. I gave each user `sudo` privileges.
 
   ```sh
   adduser jalanvanshika
@@ -65,26 +67,26 @@ I am using digital ocean
 ## Set up SSH
 
 - See the [DigitalOcean How To Connect To Your Droplet with SSH](https://www.digitalocean.com/community/tutorials/how-to-connect-to-your-droplet-with-ssh) guide.
-- I [generated an SSH key and added it to the SSH agent](https://help.github.com/articles/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent/) *on my local machine,* with the method recommended by GitHub, which attaches your email instead of the local machine name. The config file may need to be manually created with `touch ~/.ssh/config` first. I named the key `udacity6`.
+- I [generated an SSH key and added it to the SSH agent](https://help.github.com/articles/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent/) *on my local machine,* with the method recommended by GitHub, which attaches your email instead of the local machine name. The config file may need to be manually created with `touch ~/.ssh/config` first. I named the key `udacityserver`.
 
   ```sh
   $ touch ~/.ssh/config
   $ ssh-keygen -t rsa -b 4096 -C "your_email@example.com"
-    # Enter file in which to save the key (/home/vagrant/.ssh/id_rsa):/home/vagrant/.ssh/udacitylinux
-    # Your identification has been saved in /home/vagrant/.ssh/udacitylinux.
-    # Your public key has been saved in /Users/br3ndonland/.ssh/udacitylinux.pub.
+    # Enter file in which to save the key (/home/vagrant/.ssh/id_rsa):/home/vagrant/.ssh/udacityserver
+    # Your identification has been saved in /home/vagrant/.ssh/udacityserver.
+    # Your public key has been saved in /home/vagrant/.ssh/udacityserver.pub.
   $ eval "$(ssh-agent -s)"
-  $ ssh-add -K ~/.ssh/udacitylinux
+  $ ssh-add -K ~/.ssh/udacityserver
   ```
 
 - I copied the SSH key to the server for each user with `ssh-copy-id`. **Note that `ssh-copy-id` relies on password authentication, so if you disable password authentication this won't work.** Copy the SSH ID and verify login before disabling password authentication. If you have already reconfigured your ssh port to 2200, add `-p 2200`. Also, be sure to reference the *private* key when using `ssh-copy-id`, and not the public key (in this example, *udacity6* instead of *udacity6.pub*).
 
   ```sh
-  ssh-copy-id -i ~/.ssh/udacitylinux jalanvanshika@165.22.178.141
-  ssh jalanvanshika@165.22.178.141
+  ssh-copy-id -i ~/.ssh/udacitylinux jalanvanshika@159.65.159.60
+  ssh jalanvanshika@159.65.159.60
   exit
-  ssh-copy-id -i ~/.ssh/udacitylinux grader@165.22.178.141
-  ssh grader@165.22.178.141
+  ssh-copy-id -i ~/.ssh/udacitylinux grader@159.65.159.60
+  ssh grader@159.65.159.60
   exit
   ```
 
@@ -157,7 +159,7 @@ I am using digital ocean
 
     ```sh
     logout
-    ssh grader@165.22.178.141 -p 2200
+    ssh grader@159.65.159.60 -p 2200
     ```
 - The *~/.ssh/config* file on your local machine can also be configured for easier login. This file is on my local machine, so I was able to to open it with vscode.
 
@@ -167,11 +169,11 @@ I am using digital ocean
 
   ```text
   Host udacitylinux
-    Hostname 165.22.178.141
+    Hostname 159.65.159.60
     User grader
     Port 2200
     PubKeyAuthentication yes
-    IdentityFile ~/.ssh/udacitylinux
+    IdentityFile ~/.ssh/udacityserver
 
   Host *
     AddKeysToAgent yes
@@ -179,7 +181,7 @@ I am using digital ocean
     IdentityFile ~/.ssh/id_rsa
   ```
 
-- If the config file is set up as above, log in with `ssh udacitylinux`.
+- If the config file is set up as above, log in with `ssh udacityserver`.
 
 - **After disabling password login, I started getting the SSH error `Permission denied (publickey).`** I couldn't log in from my local terminal. I spent hours troubleshooting it and working in the DigitalOcean browser console.  I read resources including [SSH.com](https://www.ssh.com/iam/ssh-key-management/) and [askubuntu](https://askubuntu.com/questions/311558/ssh-permission-denied-publickey), but the solutions didn't help. Eventually, I realized that the best solution was:
   - Delete the SSH key
