@@ -392,7 +392,7 @@ DigitalOcean has helpful documentation for the Linux server itself, but less doc
   ```
 
   - Some guides also suggest running `sudo a2enmod wsgi`, but WSGI should already enable itself upon installation.
-- Browsing to the server ip [http://192.241.141.20/](http://192.241.141.20/) should show the "It works!" default Apache page.
+- Browsing to the server ip [http://159.65.159.60/](http://159.65.159.60/) should show the "It works!" default Apache page.
   > Apache2 Ubuntu Default Page
   >
   > It works!
@@ -439,8 +439,8 @@ DigitalOcean has helpful documentation for the Linux server itself, but less doc
 
 ## Domain name
 
-- DigitalOcean is not a DNS registrar at this time. I followed the [DigitalOcean DNS tutorial](https://www.digitalocean.com/community/tutorials/an-introduction-to-digitalocean-dns) to add a domain name purchased through [Hover](https://www.hover.com/).
-- From my Hover dashboard, I pointed the domain to DigitalOcean's nameservers.
+- DigitalOcean is not a DNS registrar at this time. I followed the [DigitalOcean DNS tutorial](https://www.digitalocean.com/community/tutorials/an-introduction-to-digitalocean-dns) to add a domain name through [Freenom](https://my.freenom.com/).
+- From my Freenom dashboard, I pointed the domain to DigitalOcean's nameservers.
 
   ```text
   ns1.digitalocean.com
@@ -449,6 +449,8 @@ DigitalOcean has helpful documentation for the Linux server itself, but less doc
   ```
 
 - In my DigitalOcean account, from the Networking tab, I set an A record (for ipv4) and an AAAA record (for ipv6) so that the hostname catalog.br3ndonland.com directs to the server's IP.
+
+My web app runs on www.catalogproject.ml
 
 [(Back to top)](#top)
 
